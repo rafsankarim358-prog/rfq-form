@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RFQ - 14 Month Forecast</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f1f5f9;
+            padding: 30px 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background: #ffffff;
+            max-width: 1200px;
+            width: 100%;
+            padding: 35px 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        h1 { color: #0b2b4a; font-size: 24px; margin-bottom: 4px; }
+        .subtitle { color: #475569; margin-bottom: 25px; font-size: 14px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 25px; }
+        .full-width { grid-column: 1 / -1; }
+        label { font-weight: 600; font-size: 13px; color: #1e293b; display: block; margin-bottom: 3px; }
+        label .required { color: #dc2626; }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: 0.15s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
+            outline: none;
+        }
+        textarea { resize: vertical; min-height: 50px; }
+
+        .forecast-section { margin-top: 28px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .forecast-section h3 { font-size: 16px; margin-bottom: 6px; color: #0b2b4a; }
+        .forecast-section .hint { font-size: 13px; color: #64748b; margin-bottom: 14px; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #e2e8f0; padding: 8px 4px; text-align: center; font-weight: 700; color: #1e293b; border: 1px solid #cbd5e1; white-space: nowrap; }
+        td { padding: 4px; border: 1px solid #cbd5e1; text-align: center; }
+        td input { width: 68px; padding: 6px 2px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; }
+        td input:focus { border-color: #2563eb; }
+        .month-label { font-weight: 500; background: #f1f5f9; padding: 0 8px; }
+
+        .totals-row { margin-top: 18px; display: flex; gap: 40px; flex-wrap: wrap; background: #ffffff; padding: 14px 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .totals-row label { font-weight: 700; color: #0b2b4a; font-size: 15px; }
+        .totals-row span { font-weight: 700; color: #0f3b5e; font-size: 20px; }
+
+        .btn-submit { background: #2563eb; color: white; border: none; padding: 16px; border-radius: 8px; font-size: 17px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 25px; transition: 0.2s; }
+        .btn-submit:hover { background: #1d4ed8; }
+        .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        #responseMessage { margin-top: 16px; padding: 14px; border-radius: 8px; display: none; font-weight: 600; }
+        #responseMessage.success { display: block; background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        #responseMessage.error { display: block; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+        @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } .container { padding: 20px; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📋 Request for Quotation – 14-Month Forecast</h1>
+    <p class="subtitle">Please fill in the item details and your forecasted supply quantities per month.</p>
+
+    <form id="rfqForm">
+        <div class="grid-2">
+            <div>
+                <label>Item Code <span class="required">*</span></label>
+                <input type="text" name="Item Code" required />
+            </div>
+            <div>
+                <label>Item Name <span class="required">*</span></label>
+                <input type="text" name="Item Name" required />
+            </div>
+            <div>
+                <label>Manufacturer Name <span class="required">*</span></label>
+                <input type="text" name="Manufe. Name" required />
+            </div>
+            <div>
+                <label>Supplier Name <span class="required">*</span></label>
+                <input type="text" name="Supplier Name" required />
+            </div>
+            <div>
+                <label>Intendor Name</label>
+                <input type="text" name="Intendor Name" />
+            </div>
+            <div>
+                <label>Mode of Shipment <span class="required">*</span></label>
+                <input type="text" name="Mode of Shipmrnt" placeholder="e.g., Air, Sea, Land" required />
+            </div>
+            <div>
+                <label>Your Current Offer (Unit Price USD) <span class="required">*</span></label>
+                <input type="number" step="0.01" name="Your Current Offer" id="unitPrice" required />
+            </div>
+            <div>
+                <label>Our Current Req. Qty. (Reference)</label>
+                <input type="number" step="1" name="Our Current Req. Qty." placeholder="Your total requested qty" />
+            </div>
+        </div>
+
+        <div class="forecast-section">
+            <h3>📅 Monthly Forecasted Quantity</h3>
+            <p class="hint">Enter the quantity you can supply for each month below.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="min-width:60px;">Month</th>
+                            <th>Jan-26</th>
+                            <th>Feb-26</th>
+                            <th>Mar-26</th>
+                            <th>Apr-26</th>
+                            <th>May-26</th>
+                            <th>Jun-26</th>
+                            <th>Jul-26</th>
+                            <th>Aug-26</th>
+                            <th>Sep-26</th>
+                            <th>Oct-26</th>
+                            <th>Nov-26</th>
+                            <th>Dec-26</th>
+                            <th>Jan-27</th>
+                            <th>Feb-27</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="month-label">Qty</td>
+                            <td><input type="number" step="1" min="0" name="Jan-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Feb-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Mar-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Apr-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="May-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Jun-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Jul-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Aug-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Sep-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Oct-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Nov-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Dec-26" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Jan-27" class="month-qty" value="0" /></td>
+                            <td><input type="number" step="1" min="0" name="Feb-27" class="month-qty" value="0" /></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="totals-row">
+                <div><label>📦 Total Forecast Qty:</label> <span id="displayTotalQty">0</span></div>
+                <div><label>💰 Total Forecast Value (USD):</label> <span id="displayTotalValue">0.00</span></div>
+            </div>
+
+            <input type="hidden" name="Total Qty" id="totalQty" value="0" />
+            <input type="hidden" name="Total Value" id="totalValue" value="0" />
+        </div>
+
+        <div style="margin-top: 20px;">
+            <label>Additional Notes / Terms</label>
+            <textarea name="Notes" placeholder="Special conditions, payment terms, exclusions..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">📩 Submit Quotation</button>
+    </form>
+    <div id="responseMessage"></div>
+</div>
+
+<script>
+    // ---------- IMPORTANT: REPLACE THIS WITH YOUR ACTUAL WEB APP URL ----------
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwFCtXW0RH4_FEE3JKAgMVfyrNUA4r8jjMQ_Z0dMtafr24CL32cvWn_aLSREP9mJCbt/exec';
+
+    // ---------- AUTO-CALCULATE TOTALS ----------
+    function updateTotals() {
+        const inputs = document.querySelectorAll('.month-qty');
+        let totalQty = 0;
+        inputs.forEach(input => {
+            const val = parseFloat(input.value) || 0;
+            totalQty += val;
+        });
+
+        const unitPrice = parseFloat(document.getElementById('unitPrice').value) || 0;
+        const totalValue = totalQty * unitPrice;
+
+        document.getElementById('displayTotalQty').textContent = totalQty.toLocaleString();
+        document.getElementById('displayTotalValue').textContent = totalValue.toFixed(2);
+        document.getElementById('totalQty').value = totalQty;
+        document.getElementById('totalValue').value = totalValue.toFixed(2);
+    }
+
+    document.querySelectorAll('.month-qty').forEach(inp => {
+        inp.addEventListener('input', updateTotals);
+    });
+    document.getElementById('unitPrice').addEventListener('input', updateTotals);
+
+    // ---------- FORM SUBMISSION ----------
+    const form = document.getElementById('rfqForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const responseDiv = document.getElementById('responseMessage');
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        responseDiv.style.display = 'none';
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.result === 'success') {
+                responseDiv.className = 'success';
+                responseDiv.textContent = '✅ Quotation submitted successfully! Thank you.';
+                responseDiv.style.display = 'block';
+                form.reset();
+                document.querySelectorAll('.month-qty').forEach(inp => inp.value = '0');
+                updateTotals();
+            } else {
+                throw new Error(result.error || 'Server error.');
+            }
+        } catch (error) {
+            responseDiv.className = 'error';
+            responseDiv.textContent = '❌ Submission failed: ' + error.message + '. Please try again.';
+            responseDiv.style.display = 'block';
+            console.error(error);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '📩 Submit Quotation';
+        }
+    });
+
+    updateTotals();
+</script>
+</body>
+</html>
